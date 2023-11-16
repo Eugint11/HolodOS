@@ -1,7 +1,6 @@
 package com.holod.HolodOS.storage.good;
 
 import com.holod.HolodOS.good.Good;
-import com.holod.HolodOS.recipe.Recipe;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -36,7 +35,7 @@ public class InMemoryGoodStorage implements GoodStorage{
         if (oldGood.isPresent()) {
             goodsList.remove(oldGood.get());
             goodsList.add(good);
-            log.info("Информация о товаре в холодильнике изменилась." + good.toString());
+            log.info("Информация о товаре в холодильнике изменилась." + good);
             return Optional.of(good);
         }
         log.info("Товар в холодильникe не найден." + good.toString());
