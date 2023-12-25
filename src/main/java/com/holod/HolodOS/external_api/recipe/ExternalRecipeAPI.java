@@ -1,11 +1,8 @@
-package com.holod.HolodOS.storage.recipe;
+package com.holod.HolodOS.external_api.recipe;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.holod.HolodOS.recipe.RecipeResponse;
+import com.holod.HolodOS.parsers.JsonRecipeParcer;
 import com.holod.HolodOS.recipe.Recipe;
-import com.holod.HolodOS.recipe.RecipeApi;
-import com.holod.HolodOS.typeAdapter.LocalDateTypeAdapter;
+import com.holod.HolodOS.recipe.RecipeResponse;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
@@ -16,44 +13,58 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Data
 @Component
-public class InMemoryRecipeStorage implements RecipeStorage {
+public class ExternalRecipeAPI implements ExternalRecipe {
 
     private List<Recipe> recipelist = new ArrayList<>();
     private int lastId = 0;
 
     @Override
     public RecipeResponse getRecipe(Map<String, String> params) {
-
-        Gson gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .registerTypeAdapter(LocalDate.class, new LocalDateTypeAdapter())
-                .create();
-
         try {
             RestTemplate restTemplate = new RestTemplate();
             RecipeApi recipeApi = new RecipeApi();
             recipeApi.setParams(params);
             ResponseEntity<String> response = restTemplate.exchange(
-                    recipeApi.setURL(),
+                    recipeApi.getURLWithParams(),
                     HttpMethod.GET,
-                    RecipeApi.setHeaders(),
+                    RecipeApi.getHeaders(),
+                    String.class);
+            log.info(String.join("; ",params.keySet().stream().map(x -> x+": "+params.get(x)).collect(Collectors.toList())));
+            log.info(response.getBody());
+            JsonRecipeParcer parcer = new JsonRecipeParcer();
+            return new RecipeResponse(HttpStatus.valueOf(response.getStatusCode().value()), parcer.getRecipe(response.getBody()));
+        } catch (HttpClientErrorException e) {
+            return new RecipeResponse(HttpStatus.valueOf(e.getStatusCode().value()), null);
+        }
+    }
+
+    @Override
+    public RecipeResponse getRecipe(){
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            RecipeApi recipeApi = new RecipeApi();
+            ResponseEntity<String> response = restTemplate.exchange(
+                    recipeApi.getURL(),
+                    HttpMethod.GET,
+                    RecipeApi.getHeaders(),
                     String.class);
             log.info(response.getBody());
             JsonRecipeParcer parcer = new JsonRecipeParcer();
             return new RecipeResponse(HttpStatus.valueOf(response.getStatusCode().value()), parcer.getRecipe(response.getBody()));
         } catch (HttpClientErrorException e) {
-            return new RecipeResponse(HttpStatus.valueOf(e.getStatusCode().value()), Optional.empty());
+            return new RecipeResponse(HttpStatus.valueOf(e.getStatusCode().value()), null);
         }
     }
+
 
     @Override
     public RecipeResponse addRecipe(Recipe recipe) {

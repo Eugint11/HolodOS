@@ -1,10 +1,9 @@
 package com.holod.HolodOS.controller;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.holod.HolodOS.good.Good;
+import com.holod.HolodOS.parsers.JsonParser;
 import com.holod.HolodOS.service.good.GoodServiceImp;
-import com.holod.HolodOS.typeAdapter.LocalDateTypeAdapter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,35 +14,47 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import javax.validation.ValidationException;
 import javax.validation.constraints.Positive;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
 @Controller
 @RequestMapping(path = "/goods")
 public class GoodController {
-    private Gson gson;
+    private JsonParser<Good> jsonParser = new JsonParser();
     @Autowired
     private final GoodServiceImp goodServiceImp;
 
     @Autowired
     public GoodController(GoodServiceImp goodServiceImp) {
         this.goodServiceImp = goodServiceImp;
-        gson = new GsonBuilder()
-                .registerTypeAdapter(LocalDateTime.class, new LocalDateTypeAdapter())
-                .create();
     }
 
     @GetMapping
-    public ResponseEntity getGoods(@Valid @RequestParam String nameLike) {
+    public ResponseEntity getGoods() {
+        try {
+            List<Good> goods = goodServiceImp.readAll();
+            log.info(goods.toString() + ": " + goods.size());
+            return goods.get(0) != null ?
+                    new ResponseEntity(jsonParser.toJson(goods), HttpStatus.OK) :
+                    new ResponseEntity("Товар в холодильникe не найден.", HttpStatus.NOT_FOUND);
+        } catch (ValidationException e) {
+            log.info(e.getMessage());
+            return new ResponseEntity(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping(params = {"nameLike"})
+    public ResponseEntity getGoods(@Valid
+                                   @RequestParam(value = "nameLike") String nameLike) {
         try {
             List<Good> goods = goodServiceImp.readByName(nameLike);
             log.info(goods.toString() + ": " + goods.size());
-            return goods.get(0) != null ?
-                    new ResponseEntity(gson.toJson(goods), HttpStatus.OK) :
-                    new ResponseEntity(gson.toJson("Товар в холодильникe не найден."), HttpStatus.NOT_FOUND);
+            return !goods.isEmpty() ?
+                    new ResponseEntity(jsonParser.toJson(goods), HttpStatus.OK) :
+                    new ResponseEntity("Товар в холодильникe не найден.", HttpStatus.NOT_FOUND);
         } catch (ValidationException e) {
-            return new ResponseEntity(gson.toJson(HttpStatus.BAD_REQUEST), HttpStatus.BAD_REQUEST);
+            log.info(e.getMessage());
+            return new ResponseEntity(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -51,9 +62,9 @@ public class GoodController {
     ResponseEntity addGood(@Valid @RequestBody Good good) {
         try {
             goodServiceImp.create(good);
-            return new ResponseEntity(gson.toJson(""), HttpStatus.OK);
+            return new ResponseEntity(HttpStatus.OK, HttpStatus.OK);
         } catch (ValidationException e) {
-            return new ResponseEntity(gson.toJson(HttpStatus.BAD_REQUEST), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -61,10 +72,10 @@ public class GoodController {
     ResponseEntity updateGood(@Valid @RequestBody Good good) {
         try {
             goodServiceImp.update(good, good.getId());
-            return new ResponseEntity(gson.toJson(HttpStatus.OK), HttpStatus.OK);/*:
+            return new ResponseEntity(HttpStatus.OK, HttpStatus.OK);/*:
                     new ResponseEntity(gson.toJson("Товар в холодильникe не найден."), HttpStatus.NOT_FOUND);*/
         } catch (ValidationException e) {
-            return new ResponseEntity(gson.toJson(HttpStatus.BAD_REQUEST), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -74,10 +85,10 @@ public class GoodController {
             boolean deleteGood = goodServiceImp.delete(id);
             //goodStorage.deleteGood(id);
             return deleteGood ?
-                    new ResponseEntity(gson.toJson(deleteGood), HttpStatus.OK) :
-                    new ResponseEntity(gson.toJson("Товар в холодильникe не найден."), HttpStatus.NOT_FOUND);
+                    new ResponseEntity(HttpStatus.OK, HttpStatus.OK) :
+                    new ResponseEntity("Товар в холодильникe не найден.", HttpStatus.NOT_FOUND);
         } catch (ValidationException e) {
-            return new ResponseEntity(gson.toJson(HttpStatus.BAD_REQUEST), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST);
         }
     }
 }

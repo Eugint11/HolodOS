@@ -1,4 +1,4 @@
-package com.holod.HolodOS.recipe;
+package com.holod.HolodOS.external_api.recipe;
 
 import lombok.Data;
 import lombok.Getter;
@@ -17,7 +17,7 @@ public class RecipeApi {
     @Setter
     Map<String, String> params;
 
-    public String setURL() {
+    public String getURLWithParams() {
         return uri + "?" + String.join("&",
                 this
                         .getParams()
@@ -28,7 +28,11 @@ public class RecipeApi {
         );
     }
 
-    public static HttpEntity<String> setHeaders() {
+    public String getURL() {
+        return uri;
+    }
+
+    public static HttpEntity<String> getHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-RapidAPI-Key", "75e8a02d7emsh015ca973ec02c11p18c364jsn9f8575687982");
         headers.add("X-RapidAPI-Host", "low-carb-recipes.p.rapidapi.com");

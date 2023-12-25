@@ -12,4 +12,11 @@ import java.util.Optional;
 public class RecipeResponse {
     HttpStatus httpStatus;
     Optional<List<Recipe>> recipes;
+
+    public Optional<List<Recipe>> getRecipes() {
+        if (recipes == null)
+            return Optional.empty();
+        else
+            return recipes;
+    }
 }
