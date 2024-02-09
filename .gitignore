@@ -33,4 +33,4 @@ build/
 .vscode/
 
 ### Low Carb Recipes API ###
-src/main/java/com/holod/HolodOS/external_api/recipe/
+src/main/java/com/holod/HolodOS/externalApi/lowCarbRecipes/recipe/
