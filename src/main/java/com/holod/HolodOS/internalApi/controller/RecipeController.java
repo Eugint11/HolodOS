@@ -2,6 +2,7 @@ package com.holod.HolodOS.internalApi.controller;
 
 import com.holod.HolodOS.externalApi.parsers.JsonParser;
 import com.holod.HolodOS.buisinesObject.recipe.Recipe;
+import com.holod.HolodOS.externalApi.yandexTranslate.TranslatorAPI;
 import com.holod.HolodOS.internalApi.service.recipe.RecipeServiceImp;
 import lombok.extern.slf4j.Slf4j;
 import org.postgresql.util.PSQLException;
@@ -41,6 +42,7 @@ public class RecipeController {
             recipeList = recipeServiceImp.read(name, ingredients, limit);
             if (!recipeList.isEmpty()) {
                 recipeList.forEach(recipe -> recipe.getRecipeGoodSet().forEach(recipeGood -> recipeGood.setRecipe(null)));
+                log.info(TranslatorAPI.translate("en", "ru", jsonParser.toJson(recipeList)).getBody());
                 return new ResponseEntity(jsonParser.toJson(recipeList), HttpStatus.OK);
             }
         } catch (ValidationException e) {
