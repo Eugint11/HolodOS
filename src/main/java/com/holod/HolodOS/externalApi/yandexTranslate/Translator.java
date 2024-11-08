@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 public class Translator {
     final String uri = "https://translate.api.cloud.yandex.net/translate/v2/translate";
     @Getter
-    final String authorizationKey = "Api-Key AQVN0tiFr2xhdLi6nOisYmFvcS8WBCLs13T59Yr0";
+    final String authorizationKey = "Api-Key $api_key";
 
     @Getter
     @Setter
